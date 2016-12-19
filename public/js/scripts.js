@@ -74,7 +74,50 @@ $(function() {
  */
 function addMarker(place)
 {
-    // TODO
+    var marker = new MarkerWithLabel ({
+        icon: "http://maps.google.com/mapfiles/kml/pal2/icon31.png",	
+    	position: new google.maps.LatLng(place.latitude, place.longitude),
+    	map: map,
+    	labelContent: place.place_name + ", " + place.admin_name1 + ", " + place.postal_code,
+    	labelAnchor: new google.maps.Point(20, 0),
+    	labelClass: "label"
+    });
+    
+    google.maps.event.addListener(marker, "click", function() {
+    	showInfo(marker);
+    	$.getJSON("articles.php", {
+    	    geo: place.postal_code
+    	})
+    	.done(function(data, textStatus, jqXHR) 
+    	{
+    	    if (data.length === 0)
+    	    {
+    		showInfo(marker, "No News.");
+    	    }
+    	    else
+    	    {
+        		var ul = "<ul>";	
+        		var template = _.template("<li><a href = '<%- link %>' target = '_blank'><%- title %></a></li>");
+    		for (var i = 0, n = data.length; i < n; i++)
+    		{
+    		    ul += template({
+    			link: data[i].link,
+    			title: data[i].title
+    		    }); 
+    		}
+    		ul += "</ul>";	
+    		showInfo(marker, ul);
+    	    }
+    	});
+    });
+    
+    markers.push(marker);
+    
+     google.maps.event.addListener(marker, "mouseover", function() {
+     
+     var el = marker;
+     el.addEventlistener('focusin', marker, false) ;
+     });
 }
 
 /**
@@ -159,7 +202,12 @@ function hideInfo()
  */
 function removeMarkers()
 {
-    // TODO
+    for (var i = 0, n = markers.length; i < n; i++)
+    {
+	    markers[i].setMap(null);
+    }
+    
+    markers.length = 0;
 }
 
 /**
